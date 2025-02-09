@@ -23,9 +23,9 @@ const int dataPin  = 4;   // Pin connected to DS of 74HC595
 byte chip1Data;           // Data for Chip 1 (red LED)
 byte chip2Data;           // Data for Chip 2 (green LED)
 
-// Predefined linked patterns (14 steps)
-byte chip1Pattern[14];    // Chip 1 controls red LED patterns.
-byte chip2[14];           // Chip 2 controls green LED patterns.
+// Predefined linked patterns (example uses 8 steps for simplicity)
+byte chip1Pattern[8];    // Chip 1 controls red LED patterns.
+byte chip2[8];           // Chip 2 controls green LED patterns.
 
 //----------------------
 // Setup
@@ -36,62 +36,106 @@ void setup() {
   pinMode(clockPin, OUTPUT);
   pinMode(dataPin, OUTPUT);
 
-  // Initialize Serial (optional for debugging)
+  // Initialize Serial
   Serial.begin(9600);
   
   // (Optional) Seed the random generator
   randomSeed(analogRead(0));
 
   // Define linked LED patterns for Chip 1
-  chip1Pattern[0]  = 0b10000000; // Red (Bit 7)
-  chip1Pattern[1]  = 0b01000000; // Yellow (Bit 6)
-  chip1Pattern[2]  = 0b00100000; // Green (Bit 5)
-  chip1Pattern[3]  = 0b00010000; // Red (Bit 4)
-  chip1Pattern[4]  = 0b00001000; // Yellow (Bit 3)
-  chip1Pattern[5]  = 0b00000100; // Green (Bit 2)
-  chip1Pattern[6]  = 0b00000010; // Red (Bit 1)
-  chip1Pattern[7]  = 0b00000001; // Yellow (Bit 0)
+  chip1Pattern[0] = 0b10000000; // Red (Bit 7)
+  chip1Pattern[1] = 0b01000000; // Yellow (Bit 6)
+  chip1Pattern[2] = 0b00100000; // Green (Bit 5)
+  chip1Pattern[3] = 0b00010000; // Red (Bit 4)
+  chip1Pattern[4] = 0b00001000; // Yellow (Bit 3)
+  chip1Pattern[5] = 0b00000100; // Green (Bit 2)
+  chip1Pattern[6] = 0b00000010; // Red (Bit 1)
+  chip1Pattern[7] = 0b00000001; // Yellow (Bit 0)
 
   // Define linked LED patterns for Chip 2
-  chip2[0]  = 0b00000001; // Green
-  chip2[1]  = 0b00000010; // Red
-  chip2[2]  = 0b00000100; // Yellow
-  chip2[3]  = 0b00001000; // Green
-  chip2[4]  = 0b00010000; // White
-  chip2[5]  = 0b00100000; // White
-  chip2[6]  = 0b01000000; // White
-  chip2[7]  = 0b10000000; // White
+  chip2[0] = 0b00000001; // Green
+  chip2[1] = 0b00000010; // Red
+  chip2[2] = 0b00000100; // Yellow
+  chip2[3] = 0b00001000; // Green
+  chip2[4] = 0b00010000; // White
+  chip2[5] = 0b00100000; // White
+  chip2[6] = 0b01000000; // White
+  chip2[7] = 0b10000000; // White
 
   // Blink all LEDs to indicate that setup is complete
   blinkAll(2, 500);
 }
 
 //----------------------
-// Main Loop: Run Animations in Sequence
+// Main Loop: Process Serial Commands
 //----------------------
 void loop() {
-  runAnimations();
+  if (Serial.available() > 0) {
+    char command = Serial.read();
+    processCommand(command);
+  }
+  // Other tasks can be performed here
 }
 
 //----------------------
-// Animation Runner: Calls each animation in sequence.
+// Command Processing Function
 //----------------------
-void runAnimations() {
-  animateRed();
-  animateGreen();
-  animateYellow();
-  animateWhite();
-  animateCycle();           // Cycle through the linked pattern sequence
-  animateSwirl();           // Red moves one way, green the opposite
-  animatePulse();           // Pulse (brightness effect) using both colors
-  animateRandomTwinkle();   // Random patterns on both chips
-  animateColorFade();       // Fade from red to green and back
+void processCommand(char command) {
+  switch (command) {
+    case 'r': // All Red
+      animateRed();
+      Serial.println("Animating Red");
+      break;
+    case 'g': // All Green
+      animateGreen();
+      Serial.println("Animating Green");
+      break;
+    case 'y': // All Yellow
+      animateYellow();
+      Serial.println("Animating Yellow");
+      break;
+    case 'w': // All White
+      animateWhite();
+      Serial.println("Animating White");
+      break;
+    case 'c': // Cycle through pattern sequence
+      animateCycle();
+      Serial.println("Animating Cycle");
+      break;
+    case 's': // Swirl animation
+      animateSwirl();
+      Serial.println("Animating Swirl");
+      break;
+    case 'p': // Pulse animation
+      animatePulse();
+      Serial.println("Animating Pulse");
+      break;
+    case 't': // Random Twinkle
+      animateRandomTwinkle();
+      Serial.println("Animating Random Twinkle");
+      break;
+    case 'f': // Color Fade
+      animateColorFade();
+      Serial.println("Animating Color Fade");
+      break;
+    case 'v': // Color Fade
+      animateVJ();
+      Serial.println("Animating Color VJ");
+      break;
+    case 'b': // Color Fade
+      blank();
+      Serial.println("Blank");
+      break;
+    default:
+      Serial.print("Unknown command: ");
+      Serial.println(command);
+      break;
+  }
 }
 
 //----------------------
 // Animation Functions
 //----------------------
-
 
 // Animate “All Red” using the red-designated LED positions.
 void animateRed() {
@@ -117,10 +161,32 @@ void animateYellow() {
   delay(300);
 }
 
-// Animate “All white using the white-designated LED positions.
+// Animate “All White” using the white-designated LED positions.
 void animateWhite() {
-  byte whiteChip1;
+  // If you have specific positions for white on Chip 1, set them.
+  // Otherwise, if white only applies to Chip 2:
+  byte whiteChip1 = 0;  // (Or set a value if needed)
   byte whiteChip2 = chip2[4] | chip2[5] | chip2[6] | chip2[7];
+  sendToShiftRegister(whiteChip1, whiteChip2);
+  delay(300);
+}
+
+// Animate “All VJ lights” using the white-designated LED positions.
+void animateVJ() {
+  // If you have specific positions for white on Chip 1, set them.
+  // Otherwise, if white only applies to Chip 2:
+  byte whiteChip1 = 0;  // (Or set a value if needed)
+  byte whiteChip2 = chip2[6] | chip2[7];
+  sendToShiftRegister(whiteChip1, whiteChip2);
+  delay(300);
+}
+
+// Animate “All VJ lights” using the white-designated LED positions.
+void blank() {
+  // If you have specific positions for white on Chip 1, set them.
+  // Otherwise, if white only applies to Chip 2:
+  byte whiteChip1 = 0;  // (Or set a value if needed)
+  byte whiteChip2 = 0;
   sendToShiftRegister(whiteChip1, whiteChip2);
   delay(300);
 }
@@ -130,13 +196,13 @@ void animateCycle() {
   for (int pos = 0; pos < 8; pos++) {
     byte pattern = 1 << pos;  // Shifts a '1' into the desired position.
     sendToShiftRegister(pattern, pattern);
-    delay(300);
+    delay(200);
   }
   // Cycle backward (from bit 6 back to bit 0)
   for (int pos = 6; pos >= 0; pos--) {
     byte pattern = 1 << pos;
     sendToShiftRegister(pattern, pattern);
-    delay(300);
+    delay(200);
   }
 }
 
@@ -170,7 +236,7 @@ void animatePulse() {
 
 // Random Twinkle Animation: Display random patterns on both chips.
 void animateRandomTwinkle() {
-  for (int i = 0; i < 20; i++) {
+  for (int i = 0; i < 40; i++) {
     chip1Data = random(0, 256);
     chip2Data = random(0, 256);
     sendToShiftRegister(chip1Data, chip2Data);

@@ -132,6 +132,10 @@ void processCommand(char command) {
       animateVJ();
       Serial.println("Animating Color VJ");
       break;
+    case 'm': // Color Fade
+      animatePinball();
+      Serial.println("Animating Color Pinball");
+      break;
     case 'b': // Color Fade
       blank();
       Serial.println("Blank");
@@ -183,6 +187,14 @@ void animateWhite() {
 void animateVJ() {
   byte whiteChip1 = 0;
   byte whiteChip2 = chip2[6] | chip2[7];
+  sendToShiftRegister(whiteChip1, whiteChip2);
+  delay(300);
+}
+
+// Animate “All Pinball lights” using the white-designated LED positions.
+void animatePinball() {
+  byte whiteChip1 = chip1Pattern[5] | chip1Pattern[6] | chip1Pattern[7];
+  byte whiteChip2 = 0;
   sendToShiftRegister(whiteChip1, whiteChip2);
   delay(300);
 }

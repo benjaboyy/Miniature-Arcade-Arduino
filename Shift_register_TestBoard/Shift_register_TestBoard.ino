@@ -1,7 +1,7 @@
 /**************************************************************
- *  Name    : CoolLightsPatternLinked
+ *  Name    : Miniature-Arcade-Arduino
  *  Author  : Benjamin Vitters
- *  Version : 0.5
+ *  Version : 0.6
  *  Description: A lights pattern sketch for your Arduino 
  *               miniature arcade using a 74HC595 shift register.
  *               Chip 1 patterns are stored in chip1Pattern.
@@ -23,6 +23,9 @@ const int dataPin  = 4;   // Pin connected to DS of 74HC595
 byte chip1Data;           // Data for Chip 1 (red LED)
 byte chip2Data;           // Data for Chip 2 (green LED)
 
+unsigned long lastCommandTime = 0;
+const unsigned long idleTimeout = 5000;
+
 // Predefined linked patterns (example uses 8 steps for simplicity)
 byte chip1Pattern[8];    // Chip 1 controls red LED patterns.
 byte chip2[8];           // Chip 2 controls green LED patterns.
@@ -43,8 +46,8 @@ void setup() {
   randomSeed(analogRead(0));
 
   // Define linked LED patterns for Chip 1
-  chip1Pattern[0] = 0b10000000; // Red (Bit 7)
-  chip1Pattern[1] = 0b01000000; // Yellow (Bit 6)
+  chip1Pattern[0] = 0b01000000; // Red (Bit 7)
+  chip1Pattern[1] = 0b10000000; // Yellow (Bit 6)
   chip1Pattern[2] = 0b00100000; // Green (Bit 5)
   chip1Pattern[3] = 0b00010000; // Red (Bit 4)
   chip1Pattern[4] = 0b00001000; // Yellow (Bit 3)
@@ -63,7 +66,8 @@ void setup() {
   chip2[7] = 0b10000000; // White
 
   // Blink all LEDs to indicate that setup is complete
-  blinkAll(2, 500);
+  animatePulse();
+  blank();
 }
 
 //----------------------
@@ -73,8 +77,14 @@ void loop() {
   if (Serial.available() > 0) {
     char command = Serial.read();
     processCommand(command);
+    lastCommandTime = millis();  // Reset the idle timer on each command
   }
-  // Other tasks can be performed here
+  
+  // If no command received for the idleTimeout duration, run the idle animation
+  if (millis() - lastCommandTime > idleTimeout) {
+    animateIdle();
+    lastCommandTime = millis();  // Reset timer after running idle animation
+  }
 }
 
 //----------------------
@@ -139,9 +149,17 @@ void processCommand(char command) {
 
 // Animate “All Red” using the red-designated LED positions.
 void animateRed() {
-  byte redChip1 = chip1Pattern[1] | chip1Pattern[4] | chip1Pattern[6];
+  byte redChip1 = chip1Pattern[0] | chip1Pattern[4] | chip1Pattern[6];
   byte redChip2 = chip2[1]; // Adjust indices as per your setup
   sendToShiftRegister(redChip1, redChip2);
+  delay(300);
+}
+
+// Animate “All Yellow” using the yellow-designated LED positions.
+void animateYellow() {
+  byte yellowChip1 = chip1Pattern[1] | chip1Pattern[3] | chip1Pattern[7];
+  byte yellowChip2 = chip2[2];
+  sendToShiftRegister(yellowChip1, yellowChip2);
   delay(300);
 }
 
@@ -153,19 +171,9 @@ void animateGreen() {
   delay(300);
 }
 
-// Animate “All Yellow” using the yellow-designated LED positions.
-void animateYellow() {
-  byte yellowChip1 = chip1Pattern[0] | chip1Pattern[3] | chip1Pattern[7];
-  byte yellowChip2 = chip2[2];
-  sendToShiftRegister(yellowChip1, yellowChip2);
-  delay(300);
-}
-
 // Animate “All White” using the white-designated LED positions.
 void animateWhite() {
-  // If you have specific positions for white on Chip 1, set them.
-  // Otherwise, if white only applies to Chip 2:
-  byte whiteChip1 = 0;  // (Or set a value if needed)
+  byte whiteChip1 = 0;
   byte whiteChip2 = chip2[4] | chip2[5] | chip2[6] | chip2[7];
   sendToShiftRegister(whiteChip1, whiteChip2);
   delay(300);
@@ -173,9 +181,7 @@ void animateWhite() {
 
 // Animate “All VJ lights” using the white-designated LED positions.
 void animateVJ() {
-  // If you have specific positions for white on Chip 1, set them.
-  // Otherwise, if white only applies to Chip 2:
-  byte whiteChip1 = 0;  // (Or set a value if needed)
+  byte whiteChip1 = 0;
   byte whiteChip2 = chip2[6] | chip2[7];
   sendToShiftRegister(whiteChip1, whiteChip2);
   delay(300);
@@ -183,9 +189,7 @@ void animateVJ() {
 
 // Animate “All VJ lights” using the white-designated LED positions.
 void blank() {
-  // If you have specific positions for white on Chip 1, set them.
-  // Otherwise, if white only applies to Chip 2:
-  byte whiteChip1 = 0;  // (Or set a value if needed)
+  byte whiteChip1 = 0;
   byte whiteChip2 = 0;
   sendToShiftRegister(whiteChip1, whiteChip2);
   delay(300);
@@ -247,7 +251,6 @@ void animateRandomTwinkle() {
 // Color Fade Animation: Gradually shift from chip1 to chip2 and back using brightness levels.
 void animateColorFade() {
   const byte brightnessLevels[9] = {0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE, 0xFF};
-  // Fade from chip1 (full) to green (full)
   for (int i = 0; i < 9; i++) {
     byte chip1Value   = brightnessLevels[8 - i];  // chip1 decreases
     byte chip2Value = brightnessLevels[i];        // chip2 increases
@@ -262,6 +265,33 @@ void animateColorFade() {
     delay(150);
   }
 }
+
+void animateIdle() {
+  // Cycle forward
+  for (int pos = 0; pos < 8; pos++) {
+    if (Serial.available() > 0) return; // Interrupt idle if input is detected
+    byte pattern = 1 << pos;
+    sendToShiftRegister(pattern, pattern);
+    unsigned long startTime = millis();
+    while (millis() - startTime < 500) {  // Slow delay with periodic checks
+      if (Serial.available() > 0) return;
+      delay(10);
+    }
+  }
+  // Cycle backward
+  for (int pos = 6; pos >= 0; pos--) {
+    if (Serial.available() > 0) return;
+    byte pattern = 1 << pos;
+    sendToShiftRegister(pattern, pattern);
+    unsigned long startTime = millis();
+    while (millis() - startTime < 500) {
+      if (Serial.available() > 0) return;
+      delay(10);
+    }
+  }
+  blank();
+}
+
 
 //----------------------
 // Utility Functions

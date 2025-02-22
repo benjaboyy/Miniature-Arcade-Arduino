@@ -280,8 +280,7 @@ void animateColorFade() {
 
 void animateIdle() {
   // List of available animations for idle mode
-  void (*animations[])() = {animateRed, animateGreen, animateYellow, animateWhite, 
-                            animateCycle, animateSwirl, animatePulse, animateRandomTwinkle, 
+  void (*animations[])() = {animateCycle, animateSwirl, animatePulse, animateRandomTwinkle, 
                             animateColorFade, animateVJ, animatePinball};
 
   int randomIndex = random(0, sizeof(animations) / sizeof(animations[0]));  // Pick a random animation

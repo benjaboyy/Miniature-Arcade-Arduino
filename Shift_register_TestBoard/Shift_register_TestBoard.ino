@@ -156,7 +156,7 @@ void animateRed() {
   byte redChip1 = chip1Pattern[0] | chip1Pattern[4] | chip1Pattern[6];
   byte redChip2 = chip2[1]; // Adjust indices as per your setup
   sendToShiftRegister(redChip1, redChip2);
-  delay(300);
+  delay(500);
 }
 
 // Animate “All Yellow” using the yellow-designated LED positions.
@@ -164,7 +164,7 @@ void animateYellow() {
   byte yellowChip1 = chip1Pattern[1] | chip1Pattern[3] | chip1Pattern[7];
   byte yellowChip2 = chip2[2];
   sendToShiftRegister(yellowChip1, yellowChip2);
-  delay(300);
+  delay(500);
 }
 
 // Animate “All Green” using the green-designated LED positions.
@@ -172,7 +172,7 @@ void animateGreen() {
   byte greenChip1 = chip1Pattern[2] | chip1Pattern[5];
   byte greenChip2 = chip2[0] | chip2[3];
   sendToShiftRegister(greenChip1, greenChip2);
-  delay(300);
+  delay(500);
 }
 
 // Animate “All White” using the white-designated LED positions.
@@ -180,7 +180,7 @@ void animateWhite() {
   byte whiteChip1 = 0;
   byte whiteChip2 = chip2[4] | chip2[5] | chip2[6] | chip2[7];
   sendToShiftRegister(whiteChip1, whiteChip2);
-  delay(300);
+  delay(500);
 }
 
 // Animate “All VJ lights” using the white-designated LED positions.
@@ -279,29 +279,15 @@ void animateColorFade() {
 }
 
 void animateIdle() {
-  // Cycle forward
-  for (int pos = 0; pos < 8; pos++) {
-    if (Serial.available() > 0) return; // Interrupt idle if input is detected
-    byte pattern = 1 << pos;
-    sendToShiftRegister(pattern, pattern);
-    unsigned long startTime = millis();
-    while (millis() - startTime < 500) {  // Slow delay with periodic checks
-      if (Serial.available() > 0) return;
-      delay(10);
-    }
-  }
-  // Cycle backward
-  for (int pos = 6; pos >= 0; pos--) {
-    if (Serial.available() > 0) return;
-    byte pattern = 1 << pos;
-    sendToShiftRegister(pattern, pattern);
-    unsigned long startTime = millis();
-    while (millis() - startTime < 500) {
-      if (Serial.available() > 0) return;
-      delay(10);
-    }
-  }
+  // List of available animations for idle mode
+  void (*animations[])() = {animateRed, animateGreen, animateYellow, animateWhite, 
+                            animateCycle, animateSwirl, animatePulse, animateRandomTwinkle, 
+                            animateColorFade, animateVJ, animatePinball};
+
+  int randomIndex = random(0, sizeof(animations) / sizeof(animations[0]));  // Pick a random animation
+  animations[randomIndex]();  // Execute the randomly chosen animation
   blank();
+  lastCommandTime = millis();  // Reset the timer
 }
 
 

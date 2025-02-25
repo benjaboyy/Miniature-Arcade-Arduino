@@ -33,6 +33,16 @@ def send_command(command):
     else:
         status_label.config(text="Serial port not open!", fg="#EE4932")
 
+def send_random_command():
+    command = random.choice(list(commands.values()))
+    send_command(command)
+
+def send_custom_command():
+    command = custom_command_var.get().strip()
+    if command:
+        send_command(command)
+        custom_command_var.set("")  # Clear input field
+
 def funky_button_hover(event):
     colors = ["#ff5733", "#33ff57", "#3357ff", "#f033ff", "#ffd700"]
     event.widget.config(bg=random.choice(colors))
@@ -87,6 +97,27 @@ for text, cmd in commands.items():
     if col >= cols:
         col = 0
         row += 1
+
+# --- Random Command Button ---
+random_btn = tk.Button(app, text="Random Command", command=send_random_command,
+                        bg="#FF9800", fg="black", font=("Arial", 10, "bold"), relief="raised", bd=3)
+random_btn.grid(row=3, column=0, padx=10, pady=10)
+random_btn.bind("<Enter>", funky_button_hover)
+random_btn.bind("<Leave>", funky_button_leave)
+
+# --- Custom Command Entry ---
+custom_command_frame = tk.Frame(app, bg="#304166")
+custom_command_frame.grid(row=4, column=0, padx=10, pady=10)
+
+custom_command_var = tk.StringVar()
+custom_command_entry = tk.Entry(custom_command_frame, textvariable=custom_command_var, width=20, font=("Arial", 12))
+custom_command_entry.grid(row=0, column=0, padx=5, pady=5)
+
+send_custom_btn = tk.Button(custom_command_frame, text="Send", command=send_custom_command,
+                            bg="#4CAF50", fg="black", font=("Arial", 10, "bold"), relief="raised", bd=3)
+send_custom_btn.grid(row=0, column=1, padx=5, pady=5)
+send_custom_btn.bind("<Enter>", funky_button_hover)
+send_custom_btn.bind("<Leave>", funky_button_leave)
 
 refresh_com_ports()
 app.mainloop()

@@ -53,9 +53,7 @@ def funky_button_leave(event):
 # Create main window
 app = tk.Tk()
 app.title("Funky Arduino Arcade")
-import os
-script_dir = os.path.dirname(os.path.abspath(__file__))
-#app.iconbitmap(os.path.join(script_dir, "icon.ico"))
+app.iconbitmap("icon.ico")
 app.configure(bg="#304166")
 
 # --- COM Port Selection Frame ---

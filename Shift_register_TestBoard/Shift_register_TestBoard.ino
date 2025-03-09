@@ -23,6 +23,8 @@ const int dataPin  = 4;   // Pin connected to DS of 74HC595
 byte chip1Data;           // Data for Chip 1 (red LED)
 byte chip2Data;           // Data for Chip 2 (green LED)
 
+bool idleOff = true;
+
 unsigned long lastCommandTime = 0;
 const unsigned long idleTimeout = 5000;
 
@@ -81,7 +83,7 @@ void loop() {
   }
   
   // If no command received for the idleTimeout duration, run the idle animation
-  if (millis() - lastCommandTime > idleTimeout) {
+  if (millis() - lastCommandTime > idleTimeout & idleOff) {
     animateIdle();
     lastCommandTime = millis();  // Reset timer after running idle animation
   }
@@ -139,6 +141,18 @@ void processCommand(char command) {
     case 'b': // Color Fade
       blank();
       Serial.println("Blank");
+      break;
+    case 'n': // Color Fade
+      blank();
+      idleOff = false;
+      Serial.print("Toggle idle: ");
+      Serial.println(idleOff);
+      break;
+    case 'i': // Color Fade
+      blank();
+      idleOff = true;
+      Serial.print("Toggle idle: ");
+      Serial.println(idleOff);
       break;
     default:
       Serial.print("Unknown command: ");

@@ -5,6 +5,7 @@ from tkinter import ttk
 import random
 
 ser = None  # Global serial connection variable
+idle_mode = False  # Idle mode state
 
 def refresh_com_ports():
     ports = serial.tools.list_ports.comports()
@@ -43,6 +44,14 @@ def send_custom_command():
         send_command(command)
         custom_command_var.set("")  # Clear input field
 
+def toggle_idle_mode():
+    global idle_mode
+    idle_mode = not idle_mode
+    command = 'i' if idle_mode else 'n'
+    send_command(command)
+    idle_button.config(text="Disable Idle Mode" if idle_mode else "Enable Idle Mode", 
+                       bg="#FF5733" if idle_mode else "#BDD1FF")
+
 def funky_button_hover(event):
     colors = ["#ff5733", "#33ff57", "#3357ff", "#f033ff", "#ffd700"]
     event.widget.config(bg=random.choice(colors))
@@ -53,7 +62,6 @@ def funky_button_leave(event):
 # Create main window
 app = tk.Tk()
 app.title("Funky Arduino Arcade")
-app.iconbitmap("icon.ico")
 app.configure(bg="#304166")
 
 # --- COM Port Selection Frame ---
@@ -106,9 +114,16 @@ random_btn.grid(row=3, column=0, padx=10, pady=10)
 random_btn.bind("<Enter>", funky_button_hover)
 random_btn.bind("<Leave>", funky_button_leave)
 
+# --- Idle Mode Button ---
+idle_button = tk.Button(app, text="Enable Idle Mode", command=toggle_idle_mode,
+                        bg="#BDD1FF", fg="black", font=("Arial", 10, "bold"), relief="raised", bd=3)
+idle_button.grid(row=4, column=0, padx=10, pady=10)
+idle_button.bind("<Enter>", funky_button_hover)
+idle_button.bind("<Leave>", funky_button_leave)
+
 # --- Custom Command Entry ---
 custom_command_frame = tk.Frame(app, bg="#304166")
-custom_command_frame.grid(row=4, column=0, padx=10, pady=10)
+custom_command_frame.grid(row=5, column=0, padx=10, pady=10)
 
 custom_command_var = tk.StringVar()
 custom_command_entry = tk.Entry(custom_command_frame, textvariable=custom_command_var, width=20, font=("Arial", 12))

@@ -87,10 +87,10 @@ void setup() {
   lcd.init(SCR_WD, SCR_HT);
   lcd.setRotation(0);  // Leave this unchanged so the background remains as drawn.
   
-  lcd.fillScreen(BLUE);
+  lcd.fillScreen(RED);
   // Draw the background bitmap (this remains unrotated).
   // lcd.drawBitmap(0, 0, epd_bitmap_BG__2_, SCR_WD, SCR_HT, RED);
-  lcd.drawBitmap(0, 0, epd_bitmap_Layer_6, SCR_WD, SCR_HT, GREEN);
+  lcd.drawBitmap(0, 0, epd_bitmap_Layer_6, SCR_WD, SCR_HT, WHITE);
   
   // Draw the initial lanes in the notes area.
   drawLanes();

@@ -1,3 +1,6 @@
+// todo:
+// - Fuse with other code
+// - Make scroll speed adjustable in serial
 #include <SPI.h>
 #include <Adafruit_GFX.h>
 #include "ST7789_AVR.h"
@@ -31,6 +34,9 @@ struct Note {
   int y;  // y remains fixed per lane.
   bool active;
 };
+
+int combo = 0;  // Track the combo count
+int maxCombo = 0;  // Track the highest combo achieved
 
 const int MAX_NOTES = 20;
 Note notes[MAX_NOTES];
@@ -82,10 +88,46 @@ void drawLanes() {
   lcd.drawFastVLine(NOTES_AREA_X + NOTES_AREA_W - 1, NOTES_AREA_Y, NOTES_AREA_H, WHITE);
 }
 
+void drawCombo() {
+  
+  lcd.setRotation(1);  // Rotate the entire screen
+  lcd.setTextColor(WHITE, BLUE);  // White text with black background to clear previous text
+  lcd.setTextSize(2);
+
+  int textX = 6; // Adjust as needed
+  int textY = 127; // Position near the top
+
+  lcd.setCursor(textX, textY);
+  lcd.print("HIT: ");
+  lcd.print(combo);
+  
+  lcd.setRotation(0);  // Rotate the entire screen
+}
+
+void noteHit() {
+  combo++;  // Increase combo
+  if (combo > maxCombo) maxCombo = combo;  // Track max combo
+  drawCombo();  // Update the screen
+}
+
+void noteMissed() {
+  combo = 0;  // Reset the combo
+  drawCombo();  // Update the screen
+}
+
 void setup() {
   Serial.begin(9600);
   lcd.init(SCR_WD, SCR_HT);
-  lcd.setRotation(0);  // Leave this unchanged so the background remains as drawn.
+  lcd.fillScreen(RED);
+  
+  lcd.setRotation(1);  // Rotate the entire screen
+  lcd.setTextColor(WHITE);
+  lcd.setTextSize(3);
+  lcd.setCursor((SCR_HT - (6 * 8 * 2)) / 2, (SCR_WD - (8 * 2)) / 2);
+  lcd.print("KONMAI");
+  delay(2000);
+  lcd.setRotation(0);  // Reset back to normal rotation
+  delay(2000);
   
   lcd.fillScreen(BLUE);
   // Draw the background bitmap (this remains unrotated).
@@ -94,8 +136,6 @@ void setup() {
   
   // Draw the initial lanes in the notes area.
   drawLanes();
-  
-  delay(1000);
 }
 
 void loop() {
@@ -104,5 +144,13 @@ void loop() {
     spawnNote(random(LANE_COUNT));
   }
   updateNotes();
+  // Only trigger noteHit() once in 20 iterations
+  if (random(20) == 0) {  
+    noteHit();
+  }
+  // Occasionally break the combo (e.g., 1 in 50 chance)
+  if (random(50) == 0) {  
+    noteMissed();
+  }
   delay(100);
 }

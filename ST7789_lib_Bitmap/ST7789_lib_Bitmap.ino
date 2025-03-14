@@ -37,6 +37,8 @@ struct Note {
 
 int combo = 0;  // Track the combo count
 int maxCombo = 0;  // Track the highest combo achieved
+int counter = 0;
+int counterInterval = 0;
 
 const int MAX_NOTES = 20;
 Note notes[MAX_NOTES];
@@ -90,18 +92,32 @@ void drawLanes() {
 
 void drawCombo() {
   
-  lcd.setRotation(1);  // Rotate the entire screen
   lcd.setTextColor(WHITE, BLUE);  // White text with black background to clear previous text
   lcd.setTextSize(2);
 
-  int textX = 6; // Adjust as needed
-  int textY = 127; // Position near the top
-
-  lcd.setCursor(textX, textY);
-  lcd.print("HIT: ");
+  lcd.setCursor(6, 127);
+  lcd.print("HIT:");
+  if (combo < 10) {
+    lcd.print("0");  // Print leading zero for numbers < 10
+  }
   lcd.print(combo);
   
-  lcd.setRotation(0);  // Rotate the entire screen
+}
+
+void drawCounter() {
+  
+  lcd.setTextColor(WHITE, BLUE);  // White text with black background to clear previous text
+  lcd.setTextSize(1);
+
+  lcd.setCursor(252, 113);
+  if (counter < 10) {
+    lcd.print("0");  // Print leading zero for numbers < 10
+  }
+  if (counter < 100) {
+    lcd.print("0");  // Print leading zero for numbers < 10
+  }
+  lcd.print(counter);
+  lcd.print("0");
 }
 
 void noteHit() {
@@ -120,14 +136,14 @@ void setup() {
   lcd.init(SCR_WD, SCR_HT);
   lcd.fillScreen(RED);
   
+  counter = 0;
   lcd.setRotation(1);  // Rotate the entire screen
   lcd.setTextColor(WHITE);
   lcd.setTextSize(3);
   lcd.setCursor((SCR_HT - (6 * 8 * 2)) / 2, (SCR_WD - (8 * 2)) / 2);
   lcd.print("KONMAI");
-  delay(2000);
+  delay(4000);
   lcd.setRotation(0);  // Reset back to normal rotation
-  delay(2000);
   
   lcd.fillScreen(BLUE);
   // Draw the background bitmap (this remains unrotated).
@@ -144,6 +160,7 @@ void loop() {
     spawnNote(random(LANE_COUNT));
   }
   updateNotes();
+  lcd.setRotation(1);  // Rotate the entire screen
   // Only trigger noteHit() once in 20 iterations
   if (random(20) == 0) {  
     noteHit();
@@ -152,5 +169,15 @@ void loop() {
   if (random(50) == 0) {  
     noteMissed();
   }
+  counter++;
+  counterInterval++;
+  if (counterInterval >= 5) {
+    drawCounter();
+    counterInterval = 0;
+  }
+  if (counter >= 300) {
+    setup();
+  }
+  lcd.setRotation(0);  // Rotate the entire screen
   delay(100);
 }

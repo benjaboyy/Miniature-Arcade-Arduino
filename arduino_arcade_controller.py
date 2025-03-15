@@ -12,6 +12,7 @@ class SerialApp:
         self.root.configure(bg="#304166")
         
         self.ser = None
+        self.second_serial_device = None  # Added second serial device
         self.idle_mode = False
         self.commands = {
             'Red': 'r', 'Green': 'g', 'Yellow': 'y', 'White': 'w',
@@ -40,6 +41,14 @@ class SerialApp:
         
         tk.Button(com_frame, text="Refresh", command=self.refresh_com_ports, bg="#BDD1FF").grid(row=0, column=2, padx=5, pady=5)
         tk.Button(com_frame, text="Connect", command=self.set_com_port, bg="#BDD1FF").grid(row=0, column=3, padx=5, pady=5)
+        
+        tk.Label(com_frame, text="Select Second:", fg="#BDD1FF", bg="#304166").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        
+        self.second_port_var = tk.StringVar()
+        self.second_port_dropdown = ttk.Combobox(com_frame, textvariable=self.second_port_var, state="readonly", width=15)
+        self.second_port_dropdown.grid(row=1, column=1, padx=5, pady=5)
+        
+        tk.Button(com_frame, text="Connect", command=self.set_second_com_port, bg="#BDD1FF").grid(row=1, column=3, padx=5, pady=5)
     
     def create_status_label(self):
         self.status_label = tk.Label(self.root, text="Not connected", fg="#EE4932", bg="#304166", font=("Arial", 12, "bold"))
@@ -75,12 +84,17 @@ class SerialApp:
         self.custom_command_var = tk.StringVar()
         tk.Entry(custom_frame, textvariable=self.custom_command_var, width=20).grid(row=0, column=0, padx=5, pady=5)
         tk.Button(custom_frame, text="Send", command=self.send_custom_command, bg="#4CAF50").grid(row=0, column=1, padx=5, pady=5)
+        
+        # Button to send a test message to the second serial device
+        tk.Button(self.root, text="Send Test Message", command=self.send_test_message, bg="#FF5733").grid(row=6, column=0, padx=10, pady=10)
     
     def refresh_com_ports(self):
         ports = serial.tools.list_ports.comports()
         port_list = [port.device for port in ports]
         self.port_dropdown['values'] = port_list
+        self.second_port_dropdown['values'] = port_list
         self.port_var.set(port_list[0] if port_list else "")
+        self.second_port_var.set(port_list[0] if port_list else "")
     
     def set_com_port(self):
         port = self.port_var.get()
@@ -90,6 +104,17 @@ class SerialApp:
         try:
             self.ser = serial.Serial(port, 9600, timeout=1)
             self.update_status(f"Connected to {port}", "#3DD37D")
+        except Exception as e:
+            self.update_status(f"Error: {e}", "#EE4932")
+                
+    def set_second_com_port(self):
+        port = self.second_port_var.get()
+        if not port:
+            self.update_status("No second COM port selected!", "#EE4932")
+            return
+        try:
+            self.second_serial_device = serial.Serial(port, 9600, timeout=1)
+            self.update_status(f"Second device connected to {port}", "#3DD37D")
         except Exception as e:
             self.update_status(f"Error: {e}", "#EE4932")
     
@@ -107,6 +132,12 @@ class SerialApp:
         if command:
             self.send_command(command)
             self.custom_command_var.set("")
+    
+    def send_test_message(self):
+        if self.second_serial_device and self.second_serial_device.is_open:
+            self.second_serial_device.write(b'd')
+        else:
+            self.update_status("Second serial device not connected!", "#EE4932")
     
     def toggle_idle_mode(self):
         self.idle_mode = not self.idle_mode

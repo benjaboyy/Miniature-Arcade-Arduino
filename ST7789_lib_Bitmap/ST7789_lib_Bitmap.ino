@@ -7,6 +7,10 @@
 #include "bitmap.h"  // Ensure this contains a 320x170 image in RGB565 format
 #include "scoreboard.h"  // Ensure this contains a 320x170 image in RGB565 format
 
+#define COLR1 0x2104
+#define COLR2 0xE71A
+#define COLR3 0xF520
+
 #define TFT_DC   10
 #define TFT_CS   8
 #define TFT_RST  7
@@ -92,7 +96,7 @@ void drawLanes() {
 
 void drawCombo() {
   
-  lcd.setTextColor(WHITE, BLUE);  // White text with black background to clear previous text
+  lcd.setTextColor(WHITE, COLR1);  // White text with black background to clear previous text
   lcd.setTextSize(2);
 
   lcd.setCursor(6, 127);
@@ -106,7 +110,7 @@ void drawCombo() {
 
 void drawCounter() {
   
-  lcd.setTextColor(WHITE, BLUE);  // White text with black background to clear previous text
+  lcd.setTextColor(WHITE, COLR1);  // White text with black background to clear previous text
   lcd.setTextSize(1);
 
   lcd.setCursor(252, 113);
@@ -131,6 +135,17 @@ void noteMissed() {
   drawCombo();  // Update the screen
 }
 
+void checkSerial() {
+  if (Serial.available()) {
+    char c = Serial.read();
+    if (c == 'd') {  // Check for the character directly
+      Serial.println("Correct key! Restarting setup...");
+      delay(100);  // Give time for serial print before resetting
+      asm volatile ("jmp 0");  // Reset the Arduino (alternative method)
+    }
+  }
+}
+
 void setup() {
   Serial.begin(9600);
   lcd.init(SCR_WD, SCR_HT);
@@ -145,16 +160,17 @@ void setup() {
   delay(4000);
   lcd.setRotation(0);  // Reset back to normal rotation
   
-  lcd.fillScreen(BLUE);
+  lcd.fillScreen(COLR1);
   // Draw the background bitmap (this remains unrotated).
-  lcd.drawBitmap(0, 0, epd_bitmap_Layer_3, SCR_WD, SCR_HT, WHITE);
-  lcd.drawBitmap(0, 0, epd_bitmap_Layer_4, SCR_WD, SCR_HT, YELLOW);
+  lcd.drawBitmap(0, 0, epd_bitmap_Layer_3, SCR_WD, SCR_HT, COLR2);
+  lcd.drawBitmap(0, 0, epd_bitmap_Layer_4, SCR_WD, SCR_HT, COLR3);
   
   // Draw the initial lanes in the notes area.
   drawLanes();
 }
 
 void loop() {
+  checkSerial();
   // Randomly spawn a note in one of the 5 lanes.
   if (random(10) < 2) {
     spawnNote(random(LANE_COUNT));

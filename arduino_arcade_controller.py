@@ -61,8 +61,8 @@ class SerialApp:
         cols = 4
         row, col = 0, 0
         for text, cmd in self.commands.items():
-            btn = tk.Button(btn_frame, text=text, width=15, command=lambda c=cmd: self.send_command(c),
-                            bg="#BDD1FF", font=("Arial", 10, "bold"))
+            btn = tk.Button(btn_frame, text=text, width=17, command=lambda c=cmd: self.send_command(c),
+                            bg="#BDD1FF", font=("Arial", 14, "bold"))
             btn.grid(row=row, column=col, padx=5, pady=5)
             btn.bind("<Enter>", self.funky_button_hover)
             btn.bind("<Leave>", self.funky_button_leave)
@@ -73,20 +73,29 @@ class SerialApp:
                 row += 1
     
     def create_extra_controls(self):
-        tk.Button(self.root, text="Random Command", command=self.send_random_command, bg="#FF9800").grid(row=3, column=0, padx=10, pady=10)
-        
-        self.idle_button = tk.Button(self.root, text="Enable Idle Mode", command=self.toggle_idle_mode, bg="#BDD1FF")
+        tk.Button(self.root, text="Random Command", width=17, 
+                  command=self.send_random_command, bg="#FF9800").grid(
+                      row=3, column=0, padx=10, pady=10)
+
+        self.idle_button = tk.Button(self.root, text="Enable Idle Mode", width=17,
+                                     command=self.toggle_idle_mode, bg="#BDD1FF")
         self.idle_button.grid(row=4, column=0, padx=10, pady=10)
-        
+
         custom_frame = tk.Frame(self.root, bg="#304166")
         custom_frame.grid(row=5, column=0, padx=10, pady=10)
-        
+
         self.custom_command_var = tk.StringVar()
-        tk.Entry(custom_frame, textvariable=self.custom_command_var, width=20).grid(row=0, column=0, padx=5, pady=5)
-        tk.Button(custom_frame, text="Send", command=self.send_custom_command, bg="#4CAF50").grid(row=0, column=1, padx=5, pady=5)
-        
-        # Button to send a test message to the second serial device
-        tk.Button(self.root, text="Send Test Message", command=self.send_test_message, bg="#FF5733").grid(row=6, column=0, padx=10, pady=10)
+        tk.Entry(custom_frame, textvariable=self.custom_command_var, width=20).grid(
+            row=0, column=0, padx=5, pady=5)
+
+        tk.Button(custom_frame, text="Send", width=17,
+                  command=self.send_custom_command, bg="#4CAF50").grid(
+                      row=0, column=1, padx=5, pady=5)
+
+        tk.Button(self.root, text="Send Test Message", width=17, 
+                  command=self.send_test_message, bg="#FF5733").grid(
+                      row=6, column=0, padx=10, pady=10)
+
     
     def refresh_com_ports(self):
         ports = serial.tools.list_ports.comports()

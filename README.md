@@ -1,6 +1,6 @@
 # Miniature Arcade Arduino
 
-![Icon](icon.png)
+![Icon](Arcade Controler/icon.png)
 
 **Arduino project with LED and LCD animations**
 

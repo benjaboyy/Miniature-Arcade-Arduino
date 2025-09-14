@@ -64,11 +64,11 @@ void setup() {
   chip2[3] = 0b00001000; // Green
   chip2[4] = 0b00010000; // White
   chip2[5] = 0b00100000; // White
-  chip2[6] = 0b01000000; // White
+  chip2[6] = 0b01000000; // White 
   chip2[7] = 0b10000000; // White
 
   // Blink all LEDs to indicate that setup is complete
-  animatePulse();
+  animateStartup();
   blank();
 }
 
@@ -138,6 +138,11 @@ void processCommand(char command) {
       animatePinball();
       Serial.println("Animating Color Pinball");
       break;
+    case 'h': // Startup
+      blank();
+      animateStartup();
+      Serial.println("Animating Color Pinball");
+      break;
     case 'b': // Color Fade
       blank();
       Serial.println("Blank");
@@ -203,6 +208,47 @@ void animateVJ() {
   byte whiteChip2 = chip2[6] | chip2[7];
   sendToShiftRegister(whiteChip1, whiteChip2);
   delay(300);
+}
+
+void animateStartup() {
+  const int STEP_DELAY = 800;   // ms delay between each set turning on
+  // Start with all LEDs off
+  blank();
+
+  // Step 1: Turn on Pinball lights
+  animatePinball();
+  delay(STEP_DELAY);
+
+  // Step 2: Add VJ lights (while keeping Pinball lights on)
+  byte chip1State = chip1Pattern[5] | chip1Pattern[6] | chip1Pattern[7];   // Pinball LEDs
+  byte chip2State = chip2[6] | chip2[7];                                   // VJ LEDs
+  sendToShiftRegister(chip1State, chip2State);
+  delay(STEP_DELAY);
+
+  // Step 3: Add Red set
+  chip1State |= chip1Pattern[0] | chip1Pattern[4] | chip1Pattern[6];       // Add Reds
+  chip2State |= chip2[1];
+  sendToShiftRegister(chip1State, chip2State);
+  delay(STEP_DELAY);
+
+  // Step 4: Add Yellow set
+  chip1State |= chip1Pattern[1] | chip1Pattern[3] | chip1Pattern[7];       // Add Yellows
+  chip2State |= chip2[2];
+  sendToShiftRegister(chip1State, chip2State);
+  delay(STEP_DELAY);
+
+  // Step 5: Add Green set
+  chip1State |= chip1Pattern[2] | chip1Pattern[5];
+  chip2State |= chip2[0] | chip2[3];
+  sendToShiftRegister(chip1State, chip2State);
+  delay(STEP_DELAY);
+
+  // Step 6: Add White set (finishing with all lights ON)
+  chip2State |= chip2[4] | chip2[5] | chip2[6] | chip2[7];
+  sendToShiftRegister(chip1State, chip2State);
+  delay(STEP_DELAY);
+
+  // At this point, all LEDs should be on
 }
 
 // Animate “All Pinball lights” using the white-designated LED positions.
